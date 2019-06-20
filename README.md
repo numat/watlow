@@ -53,18 +53,16 @@ then exit cleanly.
 
 ```python
 from time import sleep
-
 import watlow
 
 tc = watlow.TemperatureController('/dev/ttyUSB0')
-
 try:
     while True:
         try:
             print(tc.get())
-            sleep(1)
         except IOError:
             print('disconnected')
+        sleep(1)
 except KeyboardInterrupt:
     pass
 finally:
