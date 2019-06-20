@@ -108,7 +108,7 @@ class TemperatureController(object):
             length=20,
             check=self.responses['set']
         )
-        if setpoint != response:
+        if round(setpoint, 2) != round(response, 2):
             raise IOError(f"Could not change setpoint from "
                           f"{response:.2f}°C to {setpoint:.2f}°C.")
 
