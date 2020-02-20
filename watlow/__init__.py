@@ -10,6 +10,7 @@ from watlow import mock
 def command_line():
     """CLI interface, accessible when installed through pip."""
     import argparse
+    import asyncio
     import json
 
     parser = argparse.ArgumentParser(description="Control a Watlow temperature "
@@ -23,8 +24,18 @@ def command_line():
                         help="Specify zone in case of gateway")
     args = parser.parse_args()
 
+    async def run():
+        async with Gateway(args.port) as gateway:
+            if args.set_setpoint:
+                await gateway.set_setpoint(args.zone, args.set_setpoint)
+            d = await gateway.get(args.zone)
+            print(json.dumps(d, indent=4))
+
     if args.zone:
-        gateway = Gateway(args.port)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(run())
+        loop.close()
+        return
 
     temperature_controller = TemperatureController(port=args.port)
     try:
