@@ -31,11 +31,19 @@ This returns a simple data structure.
 ```
 
 You can additionally use the `--set-setpoint` option to set a temperature setpoint.
+
+If interacting with a Watlow RUI Gateway, the zone to get or set should be passed as a flag
+```
+$ watlow -z 1 192.168.1.101
+```
+
 See `watlow --help` for more.
 
 ### Python
 
-The python interface is basic synchronous serial communication.
+#### Single Controller
+
+For a single temperature controller, the python interface is basic synchronous serial communication.
 
 ```python
 import watlow
@@ -68,3 +76,21 @@ except KeyboardInterrupt:
 finally:
     tc.close()
 ```
+
+#### Gateway
+
+The Gateway driver uses Python ≥3.5's async/await syntax to asynchronously communicate with
+the gateway over ModBus-TCP.
+
+```python
+import asyncio
+import watlow
+
+async def run():
+    async with watlow.Gateway('192.168.1.101') as gateway:
+        print(await gateway.get(1))
+
+asyncio.run(run())
+```
+
+Additionally, there is a mock for the Gateway driver available at `watlow.mock.Gateway` for testing.

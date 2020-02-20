@@ -3,7 +3,8 @@
 Distributed under the GNU General Public License v2
 Copyright (C) 2019 NuMat Technologies
 """
-from watlow.driver import TemperatureController
+from watlow.driver import TemperatureController, Gateway
+from watlow import mock
 
 
 def command_line():
@@ -12,13 +13,18 @@ def command_line():
     import json
 
     parser = argparse.ArgumentParser(description="Control a Watlow temperature "
-                                     "controller from the command line.")
+                                     "controller or gateway from the command line.")
     parser.add_argument('port', nargs='?', default='/dev/ttyUSB0', help="The "
                         "target serial port or TCP address. Default "
                         "'/dev/ttyUSB0'.")
     parser.add_argument('--set-setpoint', '-f', default=None, type=float,
                         help="Sets the setpoint temperature.")
+    parser.add_argument('--zone', '-z', default=None, type=int,
+                        help="Specify zone in case of gateway")
     args = parser.parse_args()
+
+    if args.zone:
+        gateway = Gateway(args.port)
 
     temperature_controller = TemperatureController(port=args.port)
     try:
