@@ -1,10 +1,14 @@
-"""Driver for Watlow EZ-Zone temperature controllers."""
+"""Drivers for Watlow EZ-Zone temperature controllers."""
 import struct
 from binascii import unhexlify
 import re
 
 import crcmod
 import serial
+from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
+
+from .util import AsyncioModbusClient
 
 crc = crcmod.mkCrcFun(0b10001000000100001)
 
@@ -144,3 +148,36 @@ class TemperatureController(object):
         if temperature < 0 or temperature > 250:
             return self._write_and_read(request, length, check, retries-1)
         return temperature
+
+
+class Gateway(AsyncioModbusClient):
+    def __init__(self, address, timeout=1, modbus_offset=5000):
+        super().__init__(address, timeout)
+        self.modbus_offset = modbus_offset
+        self.actual_temp_address = 360
+        self.setpoint_address = 2160
+        self.setpoint_range = (0, 200)
+
+    async def get(self, zone: int):
+        """Get oven data for a zone"""
+        output = {'actual': self.actual_temp_address,
+                  'setpoint': self.setpoint_address,
+                  }
+        for k, v in output.items():
+            address = (zone - 1) * self.modbus_offset + v
+            try:
+                result = await self.read_registers(address, 2)
+                output[k] = BinaryPayloadDecoder.fromRegisters(result, byteorder=Endian.Big).decode_32bit_float()
+            except AttributeError:
+                output[k] = None
+        return output
+
+    async def set_setpoint(self, zone: int, setpoint: float):
+        """Set the temperature setpoint for a zone"""
+        if not self.setpoint_range[0] < setpoint < self.setpoint_range[1]:
+            raise ValueError(f"Setpoint ({setpoint}) in not in the valid range from"
+                             f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
+        address = (zone - 1) * self.modbus_offset + self.setpoint_address
+        builder = BinaryPayloadBuilder(byteorder=Endian.Big)
+        builder.add_32bit_float(setpoint)
+        await self.client.protocol.write_registers(address, builder.build(), skip_encode=True)
