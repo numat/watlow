@@ -4,7 +4,7 @@ Distributed under the GNU General Public License v2
 Copyright (C) 2019 NuMat Technologies
 """
 from watlow.driver import TemperatureController, Gateway
-from watlow import mock
+from watlow import mock  # noqa: F401
 
 
 def command_line():

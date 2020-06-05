@@ -151,7 +151,10 @@ class TemperatureController(object):
 
 
 class Gateway(AsyncioModbusClient):
+    """Watlow communication using their EZ-Zone Modbus Gateway."""
+
     def __init__(self, address, timeout=1, modbus_offset=5000):
+        """Open connection to gateway."""
         super().__init__(address, timeout)
         self.modbus_offset = modbus_offset
         self.actual_temp_address = 360
@@ -159,25 +162,36 @@ class Gateway(AsyncioModbusClient):
         self.setpoint_range = (0, 200)
 
     async def get(self, zone: int):
-        """Get oven data for a zone"""
-        output = {'actual': self.actual_temp_address,
-                  'setpoint': self.setpoint_address,
-                  }
+        """Get oven data for a zone.
+
+        For more information on a 'Zone', refer to Watlow manuals.
+        """
+        output = {
+            'actual': self.actual_temp_address,
+            'setpoint': self.setpoint_address,
+        }
         for k, v in output.items():
             address = (zone - 1) * self.modbus_offset + v
             try:
                 result = await self.read_registers(address, 2)
-                output[k] = BinaryPayloadDecoder.fromRegisters(result, byteorder=Endian.Big).decode_32bit_float()
+                output[k] = BinaryPayloadDecoder.fromRegisters(
+                    result,
+                    byteorder=Endian.Big
+                ).decode_32bit_float()
             except AttributeError:
                 output[k] = None
         return output
 
     async def set_setpoint(self, zone: int, setpoint: float):
-        """Set the temperature setpoint for a zone"""
+        """Set the temperature setpoint for a zone.
+
+        For more information on a 'Zone', refer to Watlow manuals.
+        """
         if not self.setpoint_range[0] < setpoint < self.setpoint_range[1]:
             raise ValueError(f"Setpoint ({setpoint}) in not in the valid range from"
                              f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
         builder = BinaryPayloadBuilder(byteorder=Endian.Big)
         builder.add_32bit_float(setpoint)
-        await self.client.protocol.write_registers(address, builder.build(), skip_encode=True)
+        await self.client.protocol.write_registers(address, builder.build(),
+                                                   skip_encode=True)
