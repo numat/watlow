@@ -103,7 +103,7 @@ class TemperatureController(object):
 
     def set(self, setpoint):
         """Set the setpoint temperature, in C."""
-        if not 10 <= setpoint <= 200:
+        if not 10 <= setpoint <= 220:
             raise ValueError("Setpoint must be between 10°C and 200°C.")
         body = self.commands['set']['body'] + struct.pack('>f', c_to_f(setpoint))
         checksum = struct.pack('<H', ~crc(body) & 0xffff)
@@ -159,7 +159,7 @@ class Gateway(AsyncioModbusClient):
         self.modbus_offset = modbus_offset
         self.actual_temp_address = 360
         self.setpoint_address = 2160
-        self.setpoint_range = (0, 200)
+        self.setpoint_range = (10, 220)
 
     async def get(self, zone: int):
         """Get oven data for a zone.
@@ -187,7 +187,7 @@ class Gateway(AsyncioModbusClient):
 
         For more information on a 'Zone', refer to Watlow manuals.
         """
-        if not self.setpoint_range[0] < setpoint < self.setpoint_range[1]:
+        if not self.setpoint_range[0] <= setpoint <= self.setpoint_range[1]:
             raise ValueError(f"Setpoint ({setpoint}) in not in the valid range from"
                              f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
