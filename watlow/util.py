@@ -115,13 +115,10 @@ class AsyncioModbusClient(object):
         self.waiting = True
         try:
             return await asyncio.wait_for(future, timeout=self.timeout)
-        except asyncio.TimeoutError as e:
+        except (asyncio.TimeoutError, pymodbus.exceptions.ModbusIOException) as e:
             if self.open:
-                # This came from reading through the pymodbus@python3 source
-                # Problem was that the driver was not detecting disconnect
-                if hasattr(self, 'modbus'):
-                    self.client.protocol_lost_connection(self.modbus)
                 self.open = False
+                await self._connect()
             raise TimeoutError(e)
         except pymodbus.exceptions.ConnectionException as e:
             raise ConnectionError(e)
