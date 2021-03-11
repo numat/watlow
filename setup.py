@@ -6,7 +6,7 @@ with open('README.md', 'r') as in_file:
 
 setup(
     name="watlow",
-    version="0.2.3",
+    version="0.2.4b1",
     description="Python driver for Watlow EZ-Zone temperature controllers.",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -14,7 +14,9 @@ setup(
     author="Patrick Fuller",
     author_email="pat@numat-tech.com",
     packages=["watlow"],
-    install_requires=["pymodbus==2.2.0rc1", "pyserial", "crcmod"],
+    install_requires=["pymodbus==2.5.0",
+                      "pyserial",
+                      "crcmod"],
     entry_points={
         "console_scripts": [("watlow = watlow:command_line")]
     },
