@@ -12,7 +12,7 @@ with open('README.md', 'r') as in_file:
 
 setup(
     name="watlow",
-    version="0.2.4",
+    version="0.2.5",
     description="Python driver for Watlow EZ-Zone temperature controllers.",
     long_description=long_description,
     long_description_content_type='text/markdown',
