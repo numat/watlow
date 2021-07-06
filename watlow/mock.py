@@ -11,7 +11,7 @@ class Gateway:
     def __init__(self, *args, **kwargs):
         """Set random data."""
         super().__init__()
-        self.state = {i: {'actual': 25, 'setpoint': 25} for i in range(1, 9)}
+        self.state = {i: {'actual': 25, 'setpoint': 25, 'output': 0} for i in range(1, 9)}
 
     def __getattr__(self, attr):
         """Return False for any undefined method."""
@@ -24,8 +24,10 @@ class Gateway:
         for temps in self.state.values():
             if temps['actual'] < temps['setpoint']:
                 temps['actual'] += 1
+                temps['output'] = min(temps['setpoint'] - temps['actual'], 100)
             elif temps['actual'] > temps['setpoint']:
                 temps['actual'] -= 1
+                temps['output'] = 0
 
     async def get(self, zone):
         """Return a mock state with the same object structure."""

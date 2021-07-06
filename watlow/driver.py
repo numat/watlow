@@ -159,6 +159,7 @@ class Gateway(AsyncioModbusClient):
         self.modbus_offset = modbus_offset
         self.actual_temp_address = 360
         self.setpoint_address = 2160
+        self.output_address = 1904
         self.setpoint_range = (10, 220)
 
     async def get(self, zone: int):
@@ -169,6 +170,7 @@ class Gateway(AsyncioModbusClient):
         output = {
             'actual': self.actual_temp_address,
             'setpoint': self.setpoint_address,
+            'output': self.output_address,
         }
         for k, v in output.items():
             address = (zone - 1) * self.modbus_offset + v
