@@ -26,7 +26,8 @@ This returns a simple data structure.
 ```
 {
   "actual": 21.66,
-  "setpoint": 20.0
+  "setpoint": 20.0,
+  "output": 52.1
 }
 ```
 
