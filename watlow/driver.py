@@ -52,17 +52,24 @@ class TemperatureController(object):
      * Second checksum is a custom CRC-16 following Bacnet spec.
     """
 
-    commands = {'actual': unhexlify('55ff0510000006e8010301040101e399'),
-                'setpoint': unhexlify('55ff0510000006e80103010701018776'),
-                'set': {'header': unhexlify('55ff051000000aec'),
-                        'body': unhexlify('010407010108')}}
+    commands = {
+        "actual": unhexlify("55ff0510000006e8010301040101e399"),
+        "setpoint": unhexlify("55ff0510000006e80103010701018776"),
+        "set": {
+            "header": unhexlify("55ff051000000aec"),
+            "body": unhexlify("010407010108"),
+        },
+    }
     responses = {
-        'actual': re.compile('^55ff060010000b8802030104010108'
-                             '([0-9a-f]{8})([0-9a-f]{4})$'),
-        'setpoint': re.compile('^55ff060010000b8802030107010108'
-                               '([0-9a-f]{8})([0-9a-f]{4})$'),
-        'set': re.compile('^55ff060010000a76020407010108'
-                          '([0-9a-f]{8})([0-9a-f]{4})$')
+        "actual": re.compile(
+            "^55ff060010000b8802030104010108" "([0-9a-f]{8})([0-9a-f]{4})$"
+        ),
+        "setpoint": re.compile(
+            "^55ff060010000b8802030107010108" "([0-9a-f]{8})([0-9a-f]{4})$"
+        ),
+        "set": re.compile(
+            "^55ff060010000a76020407010108" "([0-9a-f]{8})([0-9a-f]{4})$"
+        ),
     }
 
     def __init__(self, port, timeout=0.5):
@@ -75,15 +82,13 @@ class TemperatureController(object):
         self.baudrate = 38400
         self.timeout = timeout
         self.connection = None
+        self.min_temp = -65
+        self.max_temp = 200
         self.open()
 
     def open(self):
         """Open up a serial connection to the oven."""
-        self.connection = serial.Serial(
-            self.port,
-            self.baudrate,
-            timeout=self.timeout
-        )
+        self.connection = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
 
     def close(self):
         """Close the serial connection. Use on cleanup."""
@@ -92,27 +97,27 @@ class TemperatureController(object):
 
     def get(self):
         """Get the current temperature and setpoint, in C."""
-        output = {'actual': None, 'setpoint': None}
+        output = {"actual": None, "setpoint": None}
         for key in output:
             output[key] = self._write_and_read(
-                request=self.commands[key],
-                length=21,
-                check=self.responses[key]
+                request=self.commands[key], length=21, check=self.responses[key]
             )
         return output
 
     def set(self, setpoint):
         """Set the setpoint temperature, in C."""
-        body = self.commands['set']['body'] + struct.pack('>f', c_to_f(setpoint))
-        checksum = struct.pack('<H', ~crc(body) & 0xffff)
+        body = self.commands["set"]["body"] + struct.pack(">f", c_to_f(setpoint))
+        checksum = struct.pack("<H", ~crc(body) & 0xFFFF)
         response = self._write_and_read(
-            request=self.commands['set']['header'] + body + checksum,
+            request=self.commands["set"]["header"] + body + checksum,
             length=20,
-            check=self.responses['set']
+            check=self.responses["set"],
         )
         if round(setpoint, 2) != round(response, 2):
-            raise IOError(f"Could not change setpoint from "
-                          f"{response:.2f}°C to {setpoint:.2f}°C.")
+            raise IOError(
+                f"Could not change setpoint from "
+                f"{response:.2f}°C to {setpoint:.2f}°C."
+            )
 
     def _write_and_read(self, request, length, check, retries=3):
         """Write to and read from the device.
@@ -136,15 +141,15 @@ class TemperatureController(object):
             self.connection.write(request)
             response = self.connection.read(length)
         except serial.serialutil.SerialException:
-            return self._write_and_read(request, length, check, retries-1)
+            return self._write_and_read(request, length, check, retries - 1)
         match = check.match(bytes.hex(response))
         if not match:
-            return self._write_and_read(request, length, check, retries-1)
+            return self._write_and_read(request, length, check, retries - 1)
         value = match.group(1)
         # From docstring, `checksum = match.group(2)` could be added and checked.
-        temperature = f_to_c(struct.unpack('>f', unhexlify(value))[0])
-        if temperature < 0 or temperature > 250:
-            return self._write_and_read(request, length, check, retries-1)
+        temperature = f_to_c(struct.unpack(">f", unhexlify(value))[0])
+        if temperature < self.min_temp or temperature > max_temp:
+            return self._write_and_read(request, length, check, retries - 1)
         return temperature
 
 
@@ -166,17 +171,16 @@ class Gateway(AsyncioModbusClient):
         For more information on a 'Zone', refer to Watlow manuals.
         """
         output = {
-            'actual': self.actual_temp_address,
-            'setpoint': self.setpoint_address,
-            'output': self.output_address,
+            "actual": self.actual_temp_address,
+            "setpoint": self.setpoint_address,
+            "output": self.output_address,
         }
         for k, v in output.items():
             address = (zone - 1) * self.modbus_offset + v
             try:
                 result = await self.read_registers(address, 2)
                 output[k] = BinaryPayloadDecoder.fromRegisters(
-                    result,
-                    byteorder=Endian.Big
+                    result, byteorder=Endian.Big
                 ).decode_32bit_float()
             except AttributeError:
                 output[k] = None
@@ -188,10 +192,13 @@ class Gateway(AsyncioModbusClient):
         For more information on a 'Zone', refer to Watlow manuals.
         """
         if not self.setpoint_range[0] <= setpoint <= self.setpoint_range[1]:
-            raise ValueError(f"Setpoint ({setpoint}) in not in the valid range from"
-                             f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
+            raise ValueError(
+                f"Setpoint ({setpoint}) in not in the valid range from"
+                f" {self.setpoint_range[0]} to {self.setpoint_range[1]}"
+            )
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
         builder = BinaryPayloadBuilder(byteorder=Endian.Big)
         builder.add_32bit_float(setpoint)
-        await self.client.protocol.write_registers(address, builder.build(),
-                                                   skip_encode=True)
+        await self.client.protocol.write_registers(
+            address, builder.build(), skip_encode=True
+        )
