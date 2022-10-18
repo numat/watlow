@@ -136,15 +136,15 @@ class TemperatureController(object):
             self.connection.write(request)
             response = self.connection.read(length)
         except serial.serialutil.SerialException:
-            return self._write_and_read(request, length, check, retries-1)
+            return self._write_and_read(request, length, check, retries - 1)
         match = check.match(bytes.hex(response))
         if not match:
-            return self._write_and_read(request, length, check, retries-1)
+            return self._write_and_read(request, length, check, retries - 1)
         value = match.group(1)
         # From docstring, `checksum = match.group(2)` could be added and checked.
         temperature = f_to_c(struct.unpack('>f', unhexlify(value))[0])
         if temperature < 0 or temperature > 250:
-            return self._write_and_read(request, length, check, retries-1)
+            return self._write_and_read(request, length, check, retries - 1)
         return temperature
 
 
