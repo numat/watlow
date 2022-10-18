@@ -80,7 +80,7 @@ finally:
 
 #### Gateway
 
-The Gateway driver uses Python ≥3.5's async/await syntax to asynchronously communicate with
+The Gateway driver uses Python ≥3.7's async/await syntax to asynchronously communicate with
 the gateway over ModBus-TCP.
 
 ```python

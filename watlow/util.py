@@ -1,18 +1,21 @@
 """Base functionality for modbus communication.
 
 Distributed under the GNU General Public License v2
-Copyright (C) 2019 NuMat Technologies
+Copyright (C) 2022 NuMat Technologies
 """
 import asyncio
 
-from pymodbus.client.asynchronous.async_io import ReconnectingAsyncioModbusTcpClient
+try:
+    from pymodbus.client import AsyncModbusTcpClient  # 3.x
+except ImportError:  # 2.4.x - 2.5.x
+    from pymodbus.client.asynchronous.async_io import ReconnectingAsyncioModbusTcpClient
 import pymodbus.exceptions
 
 
 class AsyncioModbusClient(object):
     """A generic asyncio client.
 
-    This expands upon the pymodbus ReconnectionAsyncioModbusTcpClient by
+    This expands upon the pymodbus AsyncModbusTcpClient by
     including standard timeouts, async context manager, and queued requests.
     """
 
@@ -20,24 +23,29 @@ class AsyncioModbusClient(object):
         """Set up communication parameters."""
         self.ip = address
         self.timeout = timeout
-        self.client = ReconnectingAsyncioModbusTcpClient()
+        try:
+            self.client = AsyncModbusTcpClient(address, timeout=timeout)  # 3.0
+        except NameError:
+            self.client = ReconnectingAsyncioModbusTcpClient()  # 2.4.x - 2.5.x
         asyncio.ensure_future(self._connect())
         self.open = False
-        self.waiting = False
+        self.waiting = True
 
     async def __aenter__(self):
         """Asynchronously connect with the context manager."""
-        await self._connect()
         return self
 
     async def __aexit__(self, *args):
         """Provide exit to the context manager."""
-        self._close()
+        await self._close()
 
     async def _connect(self):
         """Start asynchronous reconnect loop."""
         self.waiting = True
-        await self.client.start(self.ip)
+        try:
+            await asyncio.wait_for(self.client.connect(), timeout=self.timeout)  # 3.x
+        except AttributeError:
+            await self.client.start(self.ip)  # 2.4.x - 2.5.x
         self.waiting = False
         if self.client.protocol is None:
             raise IOError("Could not connect to '{}'.".format(self.ip))
@@ -128,8 +136,10 @@ class AsyncioModbusClient(object):
         finally:
             self.waiting = False
 
-    def _close(self):
+    async def _close(self):
         """Close the TCP connection."""
-        self.client.stop()
+        try:
+            await self.client.close()  # 3.x
+        except AttributeError:
+            self.client.stop()  # 2.4.x - 2.5.x
         self.open = False
-        self.waiting = False
