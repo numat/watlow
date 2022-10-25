@@ -52,7 +52,7 @@ class AsyncioModbusClient(object):
                 raise IOError(f"Could not connect to '{self.ip}'.")
 
     async def read_coils(self, address, count):
-        """Read a modbus coil."""
+        """Read modbus output coils (0 address prefix)."""
         return await self._request('read_coils', address, count)
 
     async def read_registers(self, address, count):
@@ -85,7 +85,7 @@ class AsyncioModbusClient(object):
 
     async def write_register(self, address, value, skip_encode=False):
         """Write a modbus register."""
-        return await self._request('write_registers', address, value,
+        return await self._request('write_register', address, value,
                                    skip_encode=skip_encode)
 
     async def write_registers(self, address, values, skip_encode=False):
