@@ -25,6 +25,13 @@ setup(
         'pymodbus>=3.0.2; python_version >= "3.10"',
         "pyserial",
         "crcmod"],
+    extras_require={
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'pytest-asyncio',
+        ],
+    },
     entry_points={
         "console_scripts": [("watlow = watlow:command_line")]
     },

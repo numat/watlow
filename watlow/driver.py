@@ -188,7 +188,7 @@ class Gateway(AsyncioModbusClient):
         For more information on a 'Zone', refer to Watlow manuals.
         """
         if not self.setpoint_range[0] <= setpoint <= self.setpoint_range[1]:
-            raise ValueError(f"Setpoint ({setpoint}) in not in the valid range from"
+            raise ValueError(f"Setpoint ({setpoint}) is not in the valid range from"
                              f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
         builder = BinaryPayloadBuilder(byteorder=Endian.Big)
