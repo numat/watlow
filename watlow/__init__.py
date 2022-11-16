@@ -7,7 +7,7 @@ from watlow.driver import TemperatureController, Gateway
 from watlow import mock  # noqa: F401
 
 
-def command_line():
+def command_line(args=None):
     """CLI interface, accessible when installed through pip."""
     import argparse
     import asyncio
@@ -22,17 +22,17 @@ def command_line():
                         help="Sets the setpoint temperature.")
     parser.add_argument('--zone', '-z', default=None, type=int,
                         help="Specify zone in case of gateway")
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     async def run():
-        async with Gateway(args.port) as gateway:
+        async with Gateway(args) as gateway:
             if args.set_setpoint:
                 await gateway.set_setpoint(args.zone, args.set_setpoint)
             d = await gateway.get(args.zone)
             print(json.dumps(d, indent=4))
 
     if args.zone:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.run_until_complete(run())
         loop.close()
         return
