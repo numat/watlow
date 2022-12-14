@@ -29,7 +29,6 @@ class AsyncioModbusClient(object):
             self.client = ReconnectingAsyncioModbusTcpClient()  # 2.4.x - 2.5.x
         self.lock = asyncio.Lock()
         self.connectTask = asyncio.create_task(self._connect())
-        self.open = False
 
     async def __aenter__(self):
         """Asynchronously connect with the context manager."""
@@ -47,7 +46,6 @@ class AsyncioModbusClient(object):
                     await asyncio.wait_for(self.client.connect(), timeout=self.timeout)  # 3.x
                 except AttributeError:
                     await self.client.start(self.ip)  # 2.4.x - 2.5.x
-                self.open = True
             except Exception:
                 raise IOError(f"Could not connect to '{self.ip}'.")
 
@@ -114,18 +112,16 @@ class AsyncioModbusClient(object):
         """
         await self.connectTask
         async with self.lock:
-            if not self.client.connected or not self.open:
+            if not self.client.connected:
                 raise TimeoutError("Not connected to Watlow gateway.")
             future = getattr(self.client.protocol, method)(*args, **kwargs)
             try:
                 return await asyncio.wait_for(future, timeout=self.timeout)
             except asyncio.TimeoutError as e:
-                if self.open:
+                if self.client.connected and hasattr(self, 'modbus'):
                     # This came from reading through the pymodbus@python3 source
                     # Problem was that the driver was not detecting disconnect
-                    if hasattr(self, 'modbus'):
-                        self.client.protocol_lost_connection(self.modbus)
-                    self.open = False
+                    self.client.protocol_lost_connection(self.modbus)
                 raise TimeoutError(e)
             except pymodbus.exceptions.ConnectionException as e:
                 raise ConnectionError(e)
@@ -136,4 +132,3 @@ class AsyncioModbusClient(object):
             await self.client.close()  # 3.x
         except AttributeError:
             self.client.stop()  # 2.4.x - 2.5.x
-        self.open = False
