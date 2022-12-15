@@ -124,6 +124,8 @@ class AsyncioModbusClient(object):
                     self.client.protocol_lost_connection(self.modbus)
                 raise TimeoutError(e)
             except pymodbus.exceptions.ConnectionException as e:
+                if self.client.connected and hasattr(self, 'modbus'):
+                    self.client.protocol_lost_connection(self.modbus)
                 raise ConnectionError(e)
 
     async def _close(self):
