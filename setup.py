@@ -1,6 +1,9 @@
 """Install parameters for CLI and python import."""
 from sys import version_info
 from setuptools import setup
+import logging
+
+logging.getLogger().setLevel(logging.DEBUG)
 
 if version_info < (3, 7):
     raise ImportError("This module requires Python >=3.7.  Use 0.3.1 for Python3.6")

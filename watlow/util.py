@@ -4,6 +4,7 @@ Distributed under the GNU General Public License v2
 Copyright (C) 2022 NuMat Technologies
 """
 import asyncio
+import logging
 
 try:
     from pymodbus.client import AsyncModbusTcpClient  # 3.x
@@ -21,11 +22,14 @@ class AsyncioModbusClient(object):
 
     def __init__(self, address, timeout=1):
         """Set up communication parameters."""
+        logging.debug("AsyncioModbusClient.__init__")
         self.ip = address
         self.timeout = timeout
         try:
+            logging.debug("Trying AsyncModbusTcpClient")
             self.client = AsyncModbusTcpClient(address, timeout=timeout)  # 3.0
         except NameError:
+            logging.debug("Trying ReconnectingAsyncioModbusTcpClient")
             self.client = ReconnectingAsyncioModbusTcpClient()  # 2.4.x - 2.5.x
         self.lock = asyncio.Lock()
         self.connectTask = asyncio.create_task(self._connect())
@@ -40,13 +44,17 @@ class AsyncioModbusClient(object):
 
     async def _connect(self):
         """Start asynchronous reconnect loop."""
+        logging.debug("AsyncioModbusClient._connect")
         async with self.lock:
             try:
                 try:
+                    logging.debug(f"Trying self.client.connect with timeout {self.timeout}")
                     await asyncio.wait_for(self.client.connect(), timeout=self.timeout)  # 3.x
                 except AttributeError:
+                    logging.debug(f"Trying self.client.start with ip {self.ip}")
                     await self.client.start(self.ip)  # 2.4.x - 2.5.x
-            except Exception:
+            except Exception as ex:
+                logging.error(ex)
                 raise IOError(f"Could not connect to '{self.ip}'.")
 
     async def read_coils(self, address, count):
@@ -110,26 +118,34 @@ class AsyncioModbusClient(object):
         exist, other logic will have to be added to either prevent or manage
         race conditions.
         """
+        logging.debug(f"AsyncioModbusClient._request({method}, ...)")
         await self.connectTask
         async with self.lock:
+            logging.debug(f"self.client.connected = {self.client.connected}")
             if not self.client.connected:
                 raise TimeoutError("Not connected to Watlow gateway.")
             future = getattr(self.client.protocol, method)(*args, **kwargs)
             try:
                 return await asyncio.wait_for(future, timeout=self.timeout)
             except asyncio.TimeoutError as e:
+                logging.debug(f"asyncio.TimeoutError {e}")
                 if self.client.connected and hasattr(self, 'modbus'):
                     # This came from reading through the pymodbus@python3 source
                     # Problem was that the driver was not detecting disconnect
                     self.client.protocol_lost_connection(self.modbus)
                 raise TimeoutError(e)
             except pymodbus.exceptions.ConnectionException as e:
+                logging.debug(f"pymodbus.exceptions.ConnectionException {e}")
                 if self.client.connected and hasattr(self, 'modbus'):
                     self.client.protocol_lost_connection(self.modbus)
                 raise ConnectionError(e)
+            except Exception as ex:
+                logging.debug(f"Undefined exception {type(ex)}: {ex}")
+                raise
 
     async def _close(self):
         """Close the TCP connection."""
+        logging.debug("AsyncioModbusClient._close")
         try:
             await self.client.close()  # 3.x
         except AttributeError:
