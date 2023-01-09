@@ -25,7 +25,7 @@ def command_line(args=None):
     args = parser.parse_args(args)
 
     async def run():
-        async with Gateway(args) as gateway:
+        async with Gateway(args.port) as gateway:
             if args.set_setpoint:
                 await gateway.set_setpoint(args.zone, args.set_setpoint)
             d = await gateway.get(args.zone)
