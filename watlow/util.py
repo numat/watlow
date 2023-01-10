@@ -27,7 +27,7 @@ class AsyncioModbusClient(object):
         self.timeout = timeout
         try:
             logging.debug("Trying AsyncModbusTcpClient")
-            self.client = AsyncModbusTcpClient(address, timeout=timeout)  # 3.0
+            self.client = AsyncModbusTcpClient(address, timeout=timeout, reconnect_delay=100)  # 3.0
         except NameError:
             logging.debug("Trying ReconnectingAsyncioModbusTcpClient")
             self.client = ReconnectingAsyncioModbusTcpClient()  # 2.4.x - 2.5.x
