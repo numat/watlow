@@ -5,6 +5,7 @@ Copyright (C) 2022 NuMat Technologies
 """
 import asyncio
 import logging
+logging.getLogger().setLevel(logging.DEBUG)
 
 try:
     from pymodbus.client import AsyncModbusTcpClient  # 3.x
