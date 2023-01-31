@@ -120,8 +120,9 @@ class AsyncioModbusClient(object):
         race conditions.
         """
         logging.debug(f"AsyncioModbusClient._request({method}, ...)")
-        await self.connectTask
         async with self.lock:
+            if not self.client.connected:
+                await self.connectTask
             logging.debug(f"self.client.connected = {self.client.connected}")
             if not self.client.connected:
                 raise TimeoutError("Not connected to Watlow gateway.")
