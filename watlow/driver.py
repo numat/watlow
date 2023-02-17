@@ -11,7 +11,11 @@ from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
 
 from .util import AsyncioModbusClient
 
-crc = crcmod.mkCrcFun(0b10001000000100001)
+# BACnet CRC: https://sourceforge.net/p/bacnet/mailman/message/1259086/
+# CRC8 polynominal: X^8 + X^7 + 1 (110000001)
+crc8 = crcmod.mkCrcFun(0b110000001)
+# CRC16 polynominal: X^16 + X^12 + X^5 + 1 (10001000000100001)
+crc16 = crcmod.mkCrcFun(0b10001000000100001)
 
 
 def f_to_c(f):
@@ -105,7 +109,7 @@ class TemperatureController(object):
     def set(self, setpoint):
         """Set the setpoint temperature, in C."""
         body = self.commands['set']['body'] + struct.pack('>f', c_to_f(setpoint))
-        checksum = struct.pack('<H', ~crc(body) & 0xffff)
+        checksum = struct.pack('<H', ~crc8(body) & 0xffff)
         response = self._write_and_read(
             request=self.commands['set']['header'] + body + checksum,
             length=20,
