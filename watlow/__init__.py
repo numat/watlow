@@ -3,8 +3,8 @@
 Distributed under the GNU General Public License v2
 Copyright (C) 2019 NuMat Technologies
 """
-from watlow.driver import TemperatureController, Gateway
 from watlow import mock  # noqa: F401
+from watlow.driver import Gateway, TemperatureController
 
 
 def command_line(args=None):

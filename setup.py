@@ -1,5 +1,6 @@
 """Install parameters for CLI and python import."""
 from sys import version_info
+
 from setuptools import setup
 
 if version_info < (3, 7):

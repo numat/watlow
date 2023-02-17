@@ -1,7 +1,7 @@
 """Drivers for Watlow EZ-Zone temperature controllers."""
+import re
 import struct
 from binascii import unhexlify
-import re
 
 import crcmod
 import serial
