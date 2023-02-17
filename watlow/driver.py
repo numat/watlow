@@ -1,4 +1,5 @@
 """Drivers for Watlow EZ-Zone temperature controllers."""
+import logging
 import re
 import struct
 from binascii import unhexlify
@@ -133,11 +134,13 @@ class TemperatureController(object):
             raise IOError("Could not communicate with Watlow.")
         self.connection.flush()
         try:
+            logging.debug('Formatted Request: ' + str(bytes.hex(request)))
             self.connection.write(request)
             response = self.connection.read(length)
         except serial.serialutil.SerialException:
             return self._write_and_read(request, length, check, retries - 1)
         match = check.match(bytes.hex(response))
+        logging.debug('Formatted Response: ' + str(bytes.hex(response)))
         if not match:
             return self._write_and_read(request, length, check, retries - 1)
         value = match.group(1)
