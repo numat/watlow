@@ -57,10 +57,17 @@ class TemperatureController(object):
      * Second checksum is a custom CRC-16 following Bacnet spec.
     """
 
-    commands = {'actual': unhexlify('55ff0510000006e8010301040101e399'),
-                'setpoint': unhexlify('55ff0510000006e80103010701018776'),
-                'set': {'header': unhexlify('55ff051000000aec'),
-                        'body': unhexlify('010407010108')}}
+    commands = {
+        'actual':
+            {'header': unhexlify('0510000006'),
+             'body':   unhexlify('010301040101')},  # noqa: E241
+        'setpoint':
+            {'header': unhexlify('0510000006'),
+             'body':   unhexlify('010301070101')},  # noqa: E241
+        'set':
+            {'header': unhexlify('051000000a'),
+             'body':   unhexlify('010407010108')},  # noqa: E241
+    }
     responses = {
         'actual': re.compile('^55ff060010000b8802030104010108'
                              '([0-9a-f]{8})([0-9a-f]{4})$'),
@@ -97,10 +104,18 @@ class TemperatureController(object):
 
     def get(self):
         """Get the current temperature and setpoint, in C."""
+        preamble = unhexlify('55ff')
         output = {'actual': None, 'setpoint': None}
         for key in output:
+            header = self.commands[key]['header']
+            body = self.commands[key]['body']
+            # Calculate header and data checksums based on BACnet CRC
+            header_checksum = struct.pack('<H', ~crc8(self.commands[key]['header']) & 0xff)
+            data_checksum = struct.pack('<H', ~crc16(self.commands[key]['body']) & 0xffff)
+
+            # send command to controller, formatting preamble, header, crc8, body and crc16
             output[key] = self._write_and_read(
-                request=self.commands[key],
+                request=preamble + header + header_checksum[:1] + body + data_checksum,
                 length=21,
                 check=self.responses[key]
             )
@@ -108,13 +123,20 @@ class TemperatureController(object):
 
     def set(self, setpoint):
         """Set the setpoint temperature, in C."""
+        preamble = unhexlify('55ff')
+        header = self.commands['set']['header']
         body = self.commands['set']['body'] + struct.pack('>f', c_to_f(setpoint))
-        checksum = struct.pack('<H', ~crc8(body) & 0xffff)
+        # Calculate header and data checksums based on BACnet CRC
+        header_checksum = struct.pack('<H', ~crc8(self.commands['set']['header']) & 0xff)
+        data_checksum = struct.pack('<H', ~crc16(body) & 0xffff)
+
         response = self._write_and_read(
-            request=self.commands['set']['header'] + body + checksum,
+            request=preamble + header + header_checksum[:1] + body + data_checksum,
             length=20,
             check=self.responses['set']
         )
+
+        # check setpoint versus response, if not the same raise an error
         if round(setpoint, 2) != round(response, 2):
             raise IOError(f"Could not change setpoint from "
                           f"{response:.2f}°C to {setpoint:.2f}°C.")
