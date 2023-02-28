@@ -3,8 +3,9 @@ import logging
 import re
 import struct
 from binascii import unhexlify
+from typing import Dict, Union
 
-import crcmod
+import crcmod  # type: ignore
 import serial
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
@@ -86,12 +87,11 @@ class TemperatureController(object):
         self.port = port
         self.baudrate = 38400
         self.timeout = timeout
-        self.connection = None
-        self.open()
+        self.connection = self.open()
 
     def open(self):
         """Open up a serial connection to the oven."""
-        self.connection = serial.Serial(
+        return serial.Serial(
             self.port,
             self.baudrate,
             timeout=self.timeout
@@ -194,7 +194,7 @@ class Gateway(AsyncioModbusClient):
 
         For more information on a 'Zone', refer to Watlow manuals.
         """
-        output = {
+        output: Dict[str, Union[int, None]] = {
             'actual': self.actual_temp_address,
             'setpoint': self.setpoint_address,
             'output': self.output_address,

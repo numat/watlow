@@ -8,7 +8,8 @@ import asyncio
 try:
     from pymodbus.client import AsyncModbusTcpClient  # 3.x
 except ImportError:  # 2.4.x - 2.5.x
-    from pymodbus.client.asynchronous.async_io import ReconnectingAsyncioModbusTcpClient
+    from pymodbus.client.asynchronous.async_io import (  # type: ignore
+        ReconnectingAsyncioModbusTcpClient)
 import pymodbus.exceptions
 
 
@@ -44,8 +45,8 @@ class AsyncioModbusClient(object):
             try:
                 try:
                     await asyncio.wait_for(self.client.connect(), timeout=self.timeout)  # 3.x
-                except AttributeError:
-                    await self.client.start(self.ip)  # 2.4.x - 2.5.x
+                except AttributeError:  # 2.4.x - 2.5.x
+                    await self.client.start(self.ip)  # type: ignore
             except Exception:
                 raise IOError(f"Could not connect to '{self.ip}'.")
 
@@ -132,5 +133,5 @@ class AsyncioModbusClient(object):
         """Close the TCP connection."""
         try:
             await self.client.close()  # 3.x
-        except AttributeError:
-            self.client.stop()  # 2.4.x - 2.5.x
+        except AttributeError:  # 2.4.x - 2.5.x
+            self.client.stop()  # type: ignore
