@@ -120,21 +120,14 @@ class AsyncioModbusClient:
         """
         await self.connectTask
         async with self.lock:
-            if not self.client.connected:
-                raise TimeoutError("Not connected to Watlow gateway.")
-            future = getattr(self.client.protocol, method)(*args, **kwargs)
             try:
-                return await asyncio.wait_for(future, timeout=self.timeout)
-            except asyncio.TimeoutError as e:
-                if self.client.connected and hasattr(self, 'modbus'):
-                    # This came from reading through the pymodbus@python3 source
-                    # Problem was that the driver was not detecting disconnect
-                    self.client.protocol_lost_connection(self.modbus)
-                raise TimeoutError(e)
-            except pymodbus.exceptions.ConnectionException as e:
-                if self.client.connected and hasattr(self, 'modbus'):
-                    self.client.protocol_lost_connection(self.modbus)
-                raise ConnectionError(e)
+                if self.pymodbus32plus:
+                    future = getattr(self.client, method)
+                else:
+                    future = getattr(self.client.protocol, method)  # type: ignore
+                return await future(*args, **kwargs)
+            except (asyncio.TimeoutError, pymodbus.exceptions.ConnectionException):
+                raise TimeoutError("Not connected to Watlow gateway")
 
     async def _close(self) -> None:
         """Close the TCP connection."""
