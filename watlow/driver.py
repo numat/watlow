@@ -222,5 +222,5 @@ class Gateway(AsyncioModbusClient):
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
         builder = BinaryPayloadBuilder(byteorder=Endian.Big)
         builder.add_32bit_float(setpoint)
-        await self.client.protocol.write_registers(address, builder.build(),
-                                                   skip_encode=True)
+        await self.write_registers(address, builder.build(),
+                                   skip_encode=True)
