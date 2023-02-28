@@ -1,8 +1,8 @@
 """Mock Watlow interface. Use for debugging systems."""
 
 import asyncio
-from random import random
 from copy import deepcopy
+from random import random
 from unittest.mock import MagicMock
 
 from watlow.driver import Gateway as realGateway
