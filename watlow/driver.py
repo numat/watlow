@@ -61,13 +61,13 @@ class TemperatureController(object):
     commands = {
         'actual':
             {'header': unhexlify('0510000006'),
-             'body':   unhexlify('010301040101')},  # noqa: E241
+             'body':   unhexlify('010301040101')},
         'setpoint':
             {'header': unhexlify('0510000006'),
-             'body':   unhexlify('010301070101')},  # noqa: E241
+             'body':   unhexlify('010301070101')},
         'set':
             {'header': unhexlify('051000000a'),
-             'body':   unhexlify('010407010108')},  # noqa: E241
+             'body':   unhexlify('010407010108')},
     }
     responses = {
         'actual': re.compile('^55ff060010000b8802030104010108'

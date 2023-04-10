@@ -3,7 +3,7 @@ from sys import version_info
 
 from setuptools import setup
 
-if version_info < (3, 7):
+if version_info < (3, 7):  # noqa: UP036
     raise ImportError("This module requires Python >=3.7.  Use 0.3.1 for Python3.6")
 
 with open('README.md', 'r') as in_file:
@@ -31,6 +31,7 @@ setup(
             'pytest',
             'pytest-cov',
             'pytest-asyncio',
+            'ruff==0.0.261',
         ],
     },
     entry_points={
