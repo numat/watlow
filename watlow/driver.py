@@ -1,9 +1,10 @@
 """Drivers for Watlow EZ-Zone temperature controllers."""
+from __future__ import annotations
+
 import logging
 import re
 import struct
 from binascii import unhexlify
-from typing import Dict, Union
 
 import crcmod  # type: ignore
 import serial
@@ -29,7 +30,7 @@ def c_to_f(c):
     return c * 1.8 + 32.0
 
 
-class TemperatureController(object):
+class TemperatureController:
     """Driver for the Watlow EZ-ZONE temperature controller.
 
     This driver borrows heavily from this StackOverflow post:
@@ -61,13 +62,13 @@ class TemperatureController(object):
     commands = {
         'actual':
             {'header': unhexlify('0510000006'),
-             'body':   unhexlify('010301040101')},  # noqa: E241
+             'body':   unhexlify('010301040101')},
         'setpoint':
             {'header': unhexlify('0510000006'),
-             'body':   unhexlify('010301070101')},  # noqa: E241
+             'body':   unhexlify('010301070101')},
         'set':
             {'header': unhexlify('051000000a'),
-             'body':   unhexlify('010407010108')},  # noqa: E241
+             'body':   unhexlify('010407010108')},
     }
     responses = {
         'actual': re.compile('^55ff060010000b8802030104010108'
@@ -138,7 +139,7 @@ class TemperatureController(object):
 
         # check setpoint versus response, if not the same raise an error
         if round(setpoint, 2) != round(response, 2):
-            raise IOError(f"Could not change setpoint from "
+            raise OSError(f"Could not change setpoint from "
                           f"{response:.2f}°C to {setpoint:.2f}°C.")
 
     def _write_and_read(self, request, length, check, retries=3):
@@ -157,7 +158,7 @@ class TemperatureController(object):
             self.open()
         if retries <= 0:
             self.close()
-            raise IOError("Could not communicate with Watlow.")
+            raise OSError("Could not communicate with Watlow.")
         self.connection.flush()
         try:
             logging.debug('Formatted Request: ' + str(bytes.hex(request)))
@@ -194,7 +195,7 @@ class Gateway(AsyncioModbusClient):
 
         For more information on a 'Zone', refer to Watlow manuals.
         """
-        output: Dict[str, Union[int, None]] = {
+        output: dict[str, int | None] = {
             'actual': self.actual_temp_address,
             'setpoint': self.setpoint_address,
             'output': self.output_address,
