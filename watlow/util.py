@@ -127,6 +127,7 @@ class AsyncioModbusClient:
                     future = getattr(self.client.protocol, method)  # type: ignore
                 return await future(*args, **kwargs)
             except (asyncio.TimeoutError, pymodbus.exceptions.ConnectionException):
+                self.client._launch_reconnect()
                 raise TimeoutError("Not connected to Watlow gateway")
 
     async def _close(self) -> None:
