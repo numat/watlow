@@ -3,6 +3,9 @@
     "config:base"
   ],
   "timezone": "America/Chicago",
+  "pre-commit": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
