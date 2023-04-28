@@ -1,16 +1,28 @@
 line-length = 99
 ignore = [
-    "PLR2004",
-    "D104",
-    "D107",
-    "C901",
+  "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
+  "D104",     # Missing docstring in public package
+  "D107",     # Missing docstring in __init__
+  "C901",     # McCabe complexity
+  "PT001",  # Use `@pytest.fixture()` over `@pytest.fixture`
+  "PT023",  # Use `@pytest.mark.asyncio()` over `@pytest.mark.asyncio`
 ]
 exclude = ["venv*"]
-select = ["C", "D", "E", "F", "I", "UP", "YTT", "W"]
-# "SIM" flake-simplify
-# "ARG" flake8-unused args
-# "B" bandit
-# "RUF" ruff base config
+select = [
+    # "B",   # bandit
+    "C",   # complexity
+    "D",   # docstrings
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "PT",  # flake8-pytest
+    "RUF", # ruff base config
+    "SIM", # flake-simplify
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
+    "YTT", # flake8-2020
+    # "ARG", # flake8-unused args
+]
 [pydocstyle]
 convention = "pep257"
 [flake8-unused-arguments]
