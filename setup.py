@@ -11,13 +11,15 @@ with open('README.md') as in_file:
 
 setup(
     name="watlow",
-    version="0.5.1",
+    version="0.5.2",
     description="Python driver for Watlow EZ-Zone temperature controllers.",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="http://github.com/numat/watlow/",
+    url="https://github.com/numat/watlow/",
     author="Patrick Fuller",
     author_email="pat@numat-tech.com",
+    maintainer="Alex Ruddick",
+    maintainer_email="alex@numat-tech.com",
     packages=["watlow"],
     install_requires=[
         'pymodbus>=2.4.0,<3; python_version == "3.7"',
