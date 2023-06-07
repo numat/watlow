@@ -77,9 +77,9 @@ class AsyncioModbusClient:
         registers += r.registers
         return registers
 
-    async def read_holding_registers(self, address, value):
+    async def read_holding_registers(self, address, count):
         """Read modbus holding registers."""
-        await self._request('read_holding_registers', address, value)
+        await self._request('read_holding_registers', address, count)
 
     async def write_coil(self, address, value):
         """Write modbus coils."""
