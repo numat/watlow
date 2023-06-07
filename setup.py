@@ -35,6 +35,7 @@ setup(
             'pytest-cov',
             'pytest-asyncio',
             'ruff==0.0.271',
+            'types-pyserial',
         ],
     },
     entry_points={
