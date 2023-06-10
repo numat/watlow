@@ -46,9 +46,9 @@ jobs:
     - name: Lint with ruff
       run: |
         ruff .
-    # - name: Check types with mypy
-    #   run: |
-    #      mypy watlow
+    - name: Check types with mypy
+      run: |
+         mypy watlow
     - name: Pytest
       run: |
         pytest
