@@ -11,7 +11,7 @@ with open('README.md') as in_file:
 
 setup(
     name="watlow",
-    version="0.5.2",
+    version="0.5.3",
     description="Python driver for Watlow EZ-Zone temperature controllers.",
     long_description=long_description,
     long_description_content_type='text/markdown',
