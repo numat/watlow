@@ -5,6 +5,7 @@ import logging
 import re
 import struct
 from binascii import unhexlify
+from typing import ClassVar
 
 import crcmod  # type: ignore
 import serial
@@ -59,7 +60,7 @@ class TemperatureController:
      * Second checksum is a custom CRC-16 following Bacnet spec.
     """
 
-    commands = {
+    commands: ClassVar[dict] = {
         'actual':
             {'header': unhexlify('0510000006'),
              'body':   unhexlify('010301040101')},
@@ -70,7 +71,7 @@ class TemperatureController:
             {'header': unhexlify('051000000a'),
              'body':   unhexlify('010407010108')},
     }
-    responses = {
+    responses: ClassVar[dict] = {
         'actual': re.compile('^55ff060010000b8802030104010108'
                              '([0-9a-f]{8})([0-9a-f]{4})$'),
         'setpoint': re.compile('^55ff060010000b8802030107010108'
