@@ -1,10 +1,5 @@
 """Install parameters for CLI and python import."""
-from sys import version_info
-
 from setuptools import setup
-
-if version_info < (3, 7):  # noqa: UP036
-    raise ImportError("This module requires Python >=3.7.  Use 0.3.1 for Python3.6")
 
 with open('README.md') as in_file:
     long_description = in_file.read()
@@ -22,7 +17,6 @@ setup(
     maintainer_email="alex@numat-tech.com",
     packages=["watlow"],
     install_requires=[
-        'pymodbus>=2.4.0,<3; python_version == "3.7"',
         'pymodbus>=2.4.0; python_version == "3.8"',
         'pymodbus>=2.4.0; python_version == "3.9"',
         'pymodbus>=3.0.2,<3.4.0; python_version >= "3.10"',
@@ -48,7 +42,6 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
