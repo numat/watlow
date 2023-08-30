@@ -201,13 +201,14 @@ class Gateway(AsyncioModbusClient):
             'setpoint': self.setpoint_address,
             'output': self.output_address,
         }
+        endian = Endian.BIG if self.pymodbus35plus else Endian.big  # type: ignore[attr-defined]
         for k, v in output.items():
             address = (zone - 1) * self.modbus_offset + v
             try:
                 result = await self.read_registers(address, 2)
                 output[k] = BinaryPayloadDecoder.fromRegisters(
                     result,
-                    byteorder=Endian.Big
+                    byteorder=endian
                 ).decode_32bit_float()
             except AttributeError:
                 output[k] = None
@@ -222,7 +223,8 @@ class Gateway(AsyncioModbusClient):
             raise ValueError(f"Setpoint ({setpoint}) is not in the valid range from"
                              f" {self.setpoint_range[0]} to {self.setpoint_range[1]}")
         address = (zone - 1) * self.modbus_offset + self.setpoint_address
-        builder = BinaryPayloadBuilder(byteorder=Endian.Big)
+        endian = Endian.BIG if self.pymodbus35plus else Endian.big  # type: ignore[attr-defined]
+        builder = BinaryPayloadBuilder(byteorder=endian)
         builder.add_32bit_float(setpoint)
         await self.write_registers(address, builder.build(),
                                    skip_encode=True)
