@@ -24,7 +24,7 @@ setup(
         "crcmod"],
     extras_require={
         'test': [
-            'mypy==1.10.1',
+            'mypy==1.11.0',
             'pytest',
             'pytest-cov',
             'pytest-asyncio',
